@@ -1,0 +1,79 @@
+function [fX, fY, slope, intercept, Rsquared] = linearRegression(x,y)
+% linearRegression computes the linear regression for a given data set
+%   Compute the linear regression based on inputs:
+%     1. x: x-values for our data set
+%     2. y: y-values for our data set
+%   Outputs:
+%     1. fX: x-values with outliers removed
+%     2. fY: y-values with outliers removed
+%     3. slope: slope from the linear regression y=mx+b
+%     4. intercept: intercept from the linear regression y=mx+b
+%     5. Rsquared: R^2, a.k.a. coefficient of determination
+
+% check that x and y are the same size :
+sizex = length(x);
+sizey = length(y);
+if sizex ~= sizey
+    error('x and y must be the same size')
+end
+
+n = sizex;
+
+% computing the interquartile range 
+    % 1. sort the data
+[sortedY, sortOrder] = sort(y);
+sortedX = x(sortOrder);
+    % 2. compute 1st quartile index
+Q1index = floor((n+1)/4);
+    % 3. compute 3rd quartile index 
+Q3index = floor((3*n+3)/4);
+    % 4. find the y-values at those indicies
+Q1 = sortedY(Q1index);
+Q3 = sortedY(Q3index);
+    % 5. compute IQR
+IQR = Q3-Q1;
+
+% discarding outliers
+numbOutlires = 0;
+for i = 1:n
+    if (sortedY(i) < Q1 - 1.5*IQR) || (sortedY(i) > Q3 + 1.5*IQR)
+        numbOutlires = numbOutlires + 1;
+    end
+end
+
+nNew = n - numbOutlires;
+fX = zeros(1,nNew);
+fY = zeros(1,nNew);
+
+ii = 0;
+for i = 1:n
+    if sortedY(i) > Q1 - 1.5*IQR 
+        if sortedY(i) < Q3 + 1.5*IQR
+        ii = ii + 1;
+        fX(ii) = sortedX(i);
+        fY(ii) = sortedY(i);
+        end
+    end
+
+end
+
+
+% linear regression
+meany = sum(fY)/nNew;
+meanx = sum(fX)/nNew;
+sumx = sum(fX);
+sumy = sum(fY);
+sumxsq = sum(fX.^2);
+sumxy = sum((fX.*fY));
+
+slope = (nNew*sumxy - sumx*sumy) / (nNew*sumxsq - sumx^2);
+intercept = meany - slope*meanx;
+fxn = slope.*fX + intercept;
+ew32`   
+% R-squared value
+
+ssTottal = sum((fY - meany).^2);
+ssResidual = sum((fY - fxn).^2);
+
+Rsquared = 1 - (ssResidual/ssTottal);
+end
