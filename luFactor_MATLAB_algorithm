@@ -1,0 +1,89 @@
+function [L, U, P] = luFactor(A)
+% luFactor(A)
+%	LU decomposition with pivotiing
+% inputs:
+%	A = coefficient matrix
+% outputs:
+%	L = lower triangular matrix
+%	U = upper triangular matrix
+%   P = the permutation matrix
+
+[m,n] = size(A);
+
+% checking the size of matrix A
+if m ~= n 
+    error('inputed matrix must be square'); end
+
+% pivoting so largest element in first colum is in top row
+
+if A(1,1) >= A(2,1) && A(1,1) >= A(3,1)
+    P = [1 0 0 ; 0 1 0 ; 0 0 1];
+elseif A(2,1) >= A(1,1) && A(2,1) >= A(3,1)
+    P = [0 1 0 ; 1 0 0 ; 0 0 1];
+elseif A(3,1) >= A(1,1) && A(3,1) >= A(2,1)
+    P = [0 0 1 ; 0 1 0 ; 1 0 0];
+end
+
+% creating U and L matricies 
+
+U = P*A;
+L = zeros(3,3);
+
+elimFactor2 = U(2,1)/U(1,1);
+L(2,1) = elimFactor2;
+elimFactor3 = U(3,1)/U(1,1);
+L(3,1) = elimFactor3;
+U(2,:) = U(2,:) - elimFactor2*U(1,:);
+U(3,:) = U(3,:) - elimFactor3*U(1,:);
+
+% pivoting so largest element in colum 2 is in row 2 
+
+if U(2,2) < U(3,2)
+    P(:,2) = [0 ; 0 ; 1];
+    P(:,3) = [0 ; 1 ; 0];
+    Pnew = [1 0 0 ; 0 0 1 ; 0 1 0];
+    U = Pnew*U;
+    L = Pnew*L; 
+end
+
+% updalting U and L matirices 
+
+elimFactor4 = U(3,2)/U(2,2);
+L(3,2) = elimFactor4;
+U(3,:) = U(3,:) - elimFactor4*U(2,:);
+L(1,1) = 1;
+L(2,2) = 1;
+L(3,3) = 1; 
+
+% confirming correct size of outputs
+%   *note it check sizes in order L, U, then P
+
+[mL,nL] = size(L);
+[mU,nU] = size(U);
+[mP,nP] = size(P);
+if m ~= mL || n ~= nL
+    error('incorrect size for L matrix')
+elseif m ~= mU || n ~= nU
+    error('incorrect size for U matrix')
+elseif m ~= mP || n ~= nP
+    error('incorrect size for P matrix')
+end
+
+% confirming matrices L and U are triangular
+%   *note checks L the U
+for i = 1:m
+    for j = 1:n
+        if j > i && L(i,j) ~= 0 
+            error('matrix L is not a upper triangular matrix')
+        elseif i > j && U(i,j) ~= 0 
+            error('matrix U is not a lower triangular matrix')
+        end
+    end
+end
+
+% checking validity of permutation matrix P 
+if P*A ~= L*U
+    error('P matrix is incorrect')
+end
+
+end
