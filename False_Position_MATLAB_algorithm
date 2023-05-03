@@ -1,1 +1,84 @@
+function [root, fx, ea, iter] = falsePosition(func, xl, xu, es, maxit, varargin)
+% falsePosition finds the root of a function using false position method
+%   inpts
+%       func     : function being evaluated
+%       xl       : lower guess
+%       xu       : upper guess
+%       es       : desired realative error : default 0.0001%
+%       maxit    : maximum iterations : default 200 
+%       varargin : any additional parameters
+%   outputs
+%       root     : estimated root 
+%       fx       : function exaluated at the root
+%       ea       : approximate realative error 
+%       iter     : how many iterations were preformed
 
+
+if nargin < 3
+    error('at least 3 argument inputs required')
+end
+% making sure that the root exists between xl and xu
+test = func(xl)*func(xu);
+if test > 0
+    error('no sign change')
+elseif test == 0 
+    error('the root is the xl or xu inputed')
+end
+% setting es and maxit if the user didn't input them
+if nargin < 4 || isempty(es)
+    es = 0.0001; end
+if nargin < 5 || isempty(maxit)
+    maxit = 200; end
+
+% setting iteration counter and initial ea
+iter = 0;
+ea = 100;
+
+% creating a while loop that will use false position method to find the
+% root to an accuracy of es
+while ea > es
+
+    % iter will count the number of times the while loop has run
+    iter = iter + 1;
+
+    m = (func(xu)-func(xl))/(xu-xl); % slope linear fxn that passes through xu & xl
+    if iter == 1 % on the first iteration the initial root guess is set to xl
+        xrold = xl;
+    else % for all but the first iteration, the xr from the previous loop is saved as xrold
+        xrold = xr;
+    end
+
+    % guessing the root of the function by finding the root of a linear
+    % function that passes through f(xl) and f(xu) 
+    xr = xl - func(xl)/m;
+
+    % testing is the root is above or below the guess
+    test = func(xr)*func(xu);
+
+    % finding the error associated with the guess of the root
+    ea = abs((xr-xrold)/xr);
+
+    % root lies between xr and xu
+    if test < 0
+        xl = xr;
+        % root doesn't lie between xr and xu ... it lies between xl and xr
+    elseif test > 0
+        xu = xr;
+        % the root has been found
+    elseif test == 0
+        break
+    end
+
+    % too many iterations, root assumed to be current xr
+    if iter >= maxit
+        break
+    end
+end
+
+root = xr;
+fx = func(xr);
+
+fprintf('The root is found at %5.4e \n', root)
+fprintf('The function evaluated at the root is %5.4e \n', fx)
+fprintf('The estimated error is %5.4e \n', ea)
+fprintf('The number of iterations preformed was %d \n', iter)
